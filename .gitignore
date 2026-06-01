@@ -1,0 +1,13 @@
+.env
+.env.local
+.balance_checkpoint.json
+.streamlit/secrets.toml
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local wallet data — do not publish addresses to GitHub
+wallets_rows.csv
+wallets_rows_with_balances.csv
+*.csv
