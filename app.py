@@ -30,7 +30,7 @@ st.set_page_config(
     page_title="Wallet Balance Checker",
     page_icon="⬡",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 THEMES = {
@@ -139,31 +139,45 @@ def apply_theme(theme_name: str) -> None:
                 border-right: 1px solid {theme["card_border"]};
             }}
 
+            [data-testid="stSidebar"] > div:first-child {{
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                max-height: 100vh;
+                padding-bottom: 2rem;
+            }}
+
+            [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {{
+                gap: 0.4rem;
+            }}
+
             [data-testid="stSidebar"] * {{
                 color: {theme["text"]} !important;
             }}
 
-            section[data-testid="stSidebar"] {{
-                position: fixed !important;
-                left: 0;
-                top: 0;
-                height: 100vh;
-                z-index: 999999;
-                min-width: 18rem !important;
-                width: 18rem !important;
-                transform: translateX(calc(-100% + 14px));
-                transition: transform 0.25s ease, box-shadow 0.25s ease;
-                box-shadow: none;
+            [data-testid="stSidebar"] .sidebar-section-title {{
+                font-size: 0.78rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: {theme["muted"]} !important;
+                margin: 0.5rem 0 0.25rem;
             }}
 
-            section[data-testid="stSidebar"]:hover {{
-                transform: translateX(0);
-                box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+            [data-testid="stSidebar"] .sidebar-note {{
+                font-size: 0.88rem;
+                line-height: 1.5;
+                color: {theme["muted"]} !important;
             }}
 
-            [data-testid="stSidebarCollapseButton"],
-            [data-testid="collapsedControl"] {{
-                display: none !important;
+            [data-testid="stSidebar"] .chain-tag {{
+                display: inline-block;
+                padding: 0.2rem 0.55rem;
+                margin: 0.15rem 0.25rem 0.15rem 0;
+                border-radius: 999px;
+                background: rgba(99, 102, 241, 0.14);
+                border: 1px solid {theme["card_border"]};
+                font-size: 0.78rem;
+                font-weight: 600;
             }}
 
             section.main .block-container {{
@@ -422,35 +436,54 @@ def render_step_cards() -> None:
 
 
 def render_limitations() -> None:
-    with st.expander("Supported blockchains & limits", expanded=False):
+    st.markdown('<div class="sidebar-section-title">Help & limits</div>', unsafe_allow_html=True)
+    tab_chains, tab_columns, tab_limits = st.tabs(["Chains", "Columns", "Limits"])
+
+    with tab_chains:
+        st.markdown(
+            '<p class="sidebar-note">Native coin balances only (not USDT/USDC tokens).</p>',
+            unsafe_allow_html=True,
+        )
+        st.markdown("**Free API chains**")
+        st.markdown(
+            " ".join(
+                f'<span class="chain-tag">{info["symbol"]} · {name.title()}</span>'
+                for name, info in FREE_TIER_CHAINS.items()
+            ),
+            unsafe_allow_html=True,
+        )
+        st.markdown("**Paid / extra chains**")
+        st.caption("Optimism, Base, BSC, Avalanche — need paid Etherscan plan.")
+        st.caption("Scroll, zkSync — not available on API V2.")
+
+    with tab_columns:
         st.markdown(
             """
-            **Etherscan API V2** queries **native coin** balances on EVM chains using one API key.
-            It does **not** return ERC-20 token balances (USDT, USDC, etc.) in this app.
+            **Always in your CSV export**
 
-            | Network | Native coin | Free API | Column added when scan succeeds |
-            |---|---|:---:|---|
-            | Ethereum | ETH | Yes | `balance_ethereum` |
-            | Arbitrum One | ETH | Yes | `balance_arbitrum` |
-            | Polygon | POL | Yes | `balance_polygon` |
-            | Gnosis | xDAI | Yes | `balance_gnosis` |
-            | Linea | ETH | Yes | `balance_linea` |
-            | Blast | ETH | Yes | `balance_blast` |
-            | Mantle | MNT | Yes | `balance_mantle` |
-            | Optimism | ETH | Paid plan | `balance_optimism` |
-            | Base | ETH | Paid plan | `balance_base` |
-            | BNB Smart Chain | BNB | Paid plan | `balance_bsc` |
-            | Avalanche C-Chain | AVAX | Paid plan | `balance_avalanche` |
-            | Scroll | ETH | Not on API V2 | — |
-            | zkSync Era | ETH | Not on API V2 | — |
+            - `balance_ethereum` → `0` or ETH amount  
+            - `multichain_summary` → `0` or other-chain balances  
+            - `balance_fetch_status` → `ok` or `error`
 
-            **Column rules**
-            - **`balance_ethereum`** is always included — shows **`0`** or the ETH amount
-            - **`multichain_summary`** is always included — shows **`0`** or other-chain balances
-            - **`balance_fetch_status`** is always included
-            - Extra chain columns appear **only when that wallet has a non-zero balance**
+            **Optional columns**
 
-            **API limits (free key):** ~3 req/sec · ~100,000 req/day
+            - e.g. `balance_arbitrum`, `balance_polygon`  
+            - Added **only** when that wallet has a non-zero balance
+            """
+        )
+
+    with tab_limits:
+        st.markdown(
+            """
+            **Free Etherscan API key**
+
+            - ~**3** requests per second  
+            - ~**100,000** requests per day  
+            - Large scans (700+ wallets) take **2–4 minutes**
+
+            **CSV address column**
+
+            Use: `public_address`, `address`, `wallet_address`, or `wallet`
             """
         )
 
@@ -458,7 +491,9 @@ def render_limitations() -> None:
 init_session()
 
 with st.sidebar:
-    st.markdown("### Appearance")
+    st.markdown("### Wallet Balance Checker")
+    st.caption("Settings & help")
+
     dark_mode = st.toggle("Dark mode", value=st.session_state.theme == "dark")
     new_theme = "dark" if dark_mode else "light"
     if new_theme != st.session_state.theme:
@@ -466,7 +501,7 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
-    st.markdown("### Scan settings")
+    st.markdown('<div class="sidebar-section-title">Scan settings</div>', unsafe_allow_html=True)
     chain_mode = st.radio(
         "Chain coverage",
         options=["Free tier", "All chains"],
@@ -482,8 +517,9 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
     else:
-        st.error(f"Missing API key. {api_key_setup_hint()}")
+        st.warning("API key missing. Add it in Streamlit Secrets or `.env`.")
 
+    st.markdown("---")
     render_limitations()
 
 apply_theme(st.session_state.theme)
