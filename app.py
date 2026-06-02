@@ -143,6 +143,35 @@ def apply_theme(theme_name: str) -> None:
                 color: {theme["text"]} !important;
             }}
 
+            section[data-testid="stSidebar"] {{
+                position: fixed !important;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 999999;
+                min-width: 18rem !important;
+                width: 18rem !important;
+                transform: translateX(calc(-100% + 14px));
+                transition: transform 0.25s ease, box-shadow 0.25s ease;
+                box-shadow: none;
+            }}
+
+            section[data-testid="stSidebar"]:hover {{
+                transform: translateX(0);
+                box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+            }}
+
+            [data-testid="stSidebarCollapseButton"],
+            [data-testid="collapsedControl"] {{
+                display: none !important;
+            }}
+
+            section.main .block-container {{
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+                max-width: 1100px;
+            }}
+
             .hero {{
                 background: {theme["hero_grad"]};
                 border: 1px solid {theme["card_border"]};
@@ -207,6 +236,10 @@ def apply_theme(theme_name: str) -> None:
                 color: {theme["muted"]};
                 font-size: 0.92rem;
                 margin-bottom: 0.8rem;
+            }}
+
+            .upload-header {{
+                margin-bottom: 0.5rem;
             }}
 
             .metric-card {{
@@ -473,11 +506,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown('<div class="panel">', unsafe_allow_html=True)
-st.markdown('<div class="panel-title">Upload wallet sheet</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="panel-copy">CSV needs an address column: '
-    '<code>public_address</code>, <code>address</code>, <code>wallet_address</code>, or <code>wallet</code>.</div>',
+    """
+    <div class="upload-header">
+        <div class="panel-title">Upload wallet sheet</div>
+        <div class="panel-copy">CSV needs an address column:
+        <code>public_address</code>, <code>address</code>, <code>wallet_address</code>, or <code>wallet</code>.</div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 uploaded = st.file_uploader(
@@ -485,7 +521,6 @@ uploaded = st.file_uploader(
     type=["csv"],
     label_visibility="collapsed",
 )
-st.markdown("</div>", unsafe_allow_html=True)
 
 if not uploaded:
     render_step_cards()
