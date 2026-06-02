@@ -73,13 +73,40 @@ def init_session() -> None:
 
 
 def get_api_key() -> str:
+    """Load API key from Streamlit secrets (cloud) or environment / .env (local)."""
+    candidates: list[str] = []
+
     try:
-        secret = st.secrets.get("ETHERSCAN_API_KEY", "")
-        if secret:
-            return secret
+        candidates.append(str(st.secrets["ETHERSCAN_API_KEY"]).strip())
     except Exception:
         pass
-    return os.environ.get("ETHERSCAN_API_KEY", "")
+
+    try:
+        value = st.secrets.get("ETHERSCAN_API_KEY", "")
+        if value:
+            candidates.append(str(value).strip())
+    except Exception:
+        pass
+
+    env_value = os.environ.get("ETHERSCAN_API_KEY", "").strip()
+    if env_value:
+        candidates.append(env_value)
+
+    for value in candidates:
+        if value and value not in {"your_api_key_here", "your_etherscan_api_key_here"}:
+            return value
+    return ""
+
+
+def api_key_setup_hint() -> str:
+    runtime = os.environ.get("STREAMLIT_RUNTIME_ENV", "").lower()
+    host = os.environ.get("HOST", "").lower()
+    if runtime == "cloud" or "streamlit.app" in host:
+        return (
+            "Add your key in **Streamlit Cloud → Manage app → Settings → Secrets**:\n\n"
+            "```toml\nETHERSCAN_API_KEY = \"your_key_here\"\n```"
+        )
+    return "Add `ETHERSCAN_API_KEY` to your `.env` file in the project folder."
 
 
 def mask_api_key(key: str) -> str:
@@ -422,7 +449,7 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
     else:
-        st.error("Missing API key. Add ETHERSCAN_API_KEY to `.env`.")
+        st.error(f"Missing API key. {api_key_setup_hint()}")
 
     render_limitations()
 
@@ -500,7 +527,7 @@ if uploaded:
 
     if start_scan:
         if not api_key:
-            st.error("API key not found. Add `ETHERSCAN_API_KEY` to your `.env` file.")
+            st.error(f"API key not found. {api_key_setup_hint()}")
             st.stop()
 
         progress_bar = st.progress(0, text="Initializing scan...")

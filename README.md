@@ -25,15 +25,19 @@ ETHERSCAN_CALLS_PER_SECOND=3
 2. Go to [share.streamlit.io](https://share.streamlit.io) and sign in with GitHub.
 3. Click **New app** → select repo `supporttechmile-dev/wallet-balance-checker`.
 4. Set **Main file path** to `app.py`.
-5. Open **Advanced settings** → **Secrets** and add:
+5. Open **Advanced settings** → **Secrets** and paste exactly:
 
 ```toml
 ETHERSCAN_API_KEY = "your_etherscan_api_key"
 ```
 
-6. Click **Deploy**.
+   Or use the app menu: **Manage app → Settings → Secrets** (same format).
+
+6. Click **Save**, then **Reboot app** (or redeploy).
 
 Get a free API key: [etherscan.io/myapikey](https://etherscan.io/myapikey)
+
+> **Note:** `.env` files are **not** used on Streamlit Cloud. Secrets must be set in the dashboard.
 
 ## CSV format
 
